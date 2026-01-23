@@ -1,4 +1,4 @@
-package org.example;
+package de.gn0m3r4l.garminliker;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
