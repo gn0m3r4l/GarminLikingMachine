@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+
+    <!-- Encoding -->
+    <property name="charset" value="UTF-8"/>
+
+    <!-- Max line length -->
+    <module name="LineLength">
+        <property name="max" value="120"/>
+        <property name="ignorePattern" value="^package.*|^import.*"/>
+    </module>
+
+    <module name="RegexpMultiline">
+        <property name="format" value="\n\s*\n\s*\n"/>
+        <property name="message" value="Mehr als eine aufeinanderfolgende Leerzeile gefunden."/>
+    </module>
+
+    <module name="TreeWalker">
+
+        <!-- Naming -->
+        <module name="PackageName"/>
+        <module name="TypeName"/>
+        <module name="MethodName"/>
+        <module name="ParameterName"/>
+        <module name="LocalVariableName"/>
+        <module name="MemberName"/>
+
+        <!-- Imports -->
+        <module name="AvoidStarImport"/>
+        <module name="UnusedImports"/>
+        <module name="ImportOrder">
+            <property name="ordered" value="true"/>
+            <property name="separated" value="true"/>
+            <property name="groups" value="java,javax,org,com"/>
+        </module>
+
+        <!-- Complexity -->
+        <module name="CyclomaticComplexity">
+            <property name="max" value="8"/>
+        </module>
+
+        <module name="MethodLength">
+            <property name="max" value="80"/>
+        </module>
+
+        <module name="ParameterNumber">
+            <property name="max" value="6"/>
+        </module>
+
+        <!-- Code Quality -->
+        <module name="EmptyBlock"/>
+        <module name="EqualsHashCode"/>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+
+        <!-- Formatting -->
+        <module name="WhitespaceAfter"/>
+        <module name="WhitespaceAround"/>
+        <module name="NeedBraces"/>
+
+        <!-- Misc -->
+        <module name="MagicNumber">
+            <property name="ignoreNumbers" value="-1,0,1,2"/>
+        </module>
+
+    </module>
+
+</module>

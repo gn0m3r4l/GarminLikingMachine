@@ -15,3 +15,17 @@ Garmin URLs must point to profiles, Strava URLs must point to dashboards with li
 ```powershell
 java -jar target/GarminLikingMachine-1.0-SNAPSHOT.jar garmin=https://connect.garmin.com/modern/profile/12345678 garmin=https://connect.garmin.com/modern/profile/87654321 strava=https://www.strava.com/dashboard
 ```
+
+## Code quality / Complexity report
+This repository uses a local, checked-in Checkstyle ruleset to report cyclomatic complexity (goal: methods between 7–9 where practical). PMD has been removed from the default profile because it produced errors with Java 21 in this environment.
+
+To generate the Checkstyle complexity report locally (report-only, does not fail the build):
+
+```powershell
+cd C:\Users\daniel.plagge\Code\GarminLikingMachine
+mvn checkstyle:checkstyle -DskipTests
+```
+
+After running the command, the Checkstyle report is generated under `target/site` (and output is printed to the console). The Checkstyle ruleset is located in `config/checkstyle/checkstyle.xml` (CyclomaticComplexity max=9).
+
+The checkstyle configuration is based on a reduced version of the Google Java Style Guide, with some adjustments to fit the project's needs. The main focus is on maintaining a reasonable cyclomatic complexity to ensure code readability and maintainability.
