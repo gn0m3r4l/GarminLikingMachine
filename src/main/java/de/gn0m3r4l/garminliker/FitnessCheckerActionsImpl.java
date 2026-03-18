@@ -1,47 +1,42 @@
 package de.gn0m3r4l.garminliker;
 
+import java.time.Duration;
+import java.util.List;
+
 import org.openqa.selenium.By;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.time.Duration;
-import java.util.List;
-
-public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions{
+public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
 
     protected String providerName;
     protected int givenLikes = 0;
-
-    // safe getter: if subclass did not set providerName, fallback to class simple name
-    protected String getProviderName() {
-        return providerName != null ? providerName : this.getClass().getSimpleName();
-    }
 
     @Override
     public void run(WebDriver driver, List<String> urlsToBeCheckedSameWay) {
 
         if (urlsToBeCheckedSameWay == null || urlsToBeCheckedSameWay.isEmpty()) {
-            System.out.printf("No URLs provided for %s, skipping.%n", getProviderName());
+            System.out.printf("No URLs provided for %s, skipping.%n", providerName);
             return;
         }
 
-        System.out.printf("Processing %s%n", getProviderName());
+        System.out.printf("Processing %s%n", providerName);
         proceedUrls(driver, urlsToBeCheckedSameWay);
 
-
-        System.out.printf("Total likes given for %s: %s", getProviderName(), givenLikes);
+        System.out.printf("Total likes given for %s: %s%n", providerName, givenLikes);
     }
 
     @Override
     public void proceedUrls(WebDriver driver, List<String> urlsToBeCheckedSameWay) {
         givenLikes = 0;
         for (String url : urlsToBeCheckedSameWay) {
-            System.out.printf("Checking %s url: ", url);
+            System.out.printf("Checking %s: ", url);
             runUrl(driver, url);
             try {
-                Thread.sleep(3500);
+                Thread.sleep(TimeConstants.MILLIES_BETWEEN_URL_DELAYS);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -50,7 +45,7 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions{
 
     WebElement waitForMainPageById(WebDriver driver, String htmlId) {
         // defining timeout for waiting
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(TimeConstants.WEBDRIVER_TIMOUT));
 
         // waiting for main page container to be visible
         return wait.until(
@@ -60,7 +55,26 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions{
         );
     }
 
+    /**
+     * Perform a click on the provided like button and increment the shared counter.
+     * Returns true if click likely succeeded, false on exceptions.
+     */
+    protected boolean performLike(WebElement likeButton) {
+        if (likeButton == null) {
+            return false;
+        }
+        try {
+            likeButton.click();
+            givenLikes++;
+            System.out.println("Total likes given so far: " + givenLikes);
+            // small human-like pause
+            Utils.pretendToBeHuman(1, TimeConstants.DELAY_AFTER_LIKE_IN_SECONDS);
+            return true;
+        } catch (StaleElementReferenceException e) {
+            System.out.println("Button went stale during click");
+            return false;
+        }
+    }
+
     abstract void runUrl(WebDriver driver, String url);
-
-
 }
