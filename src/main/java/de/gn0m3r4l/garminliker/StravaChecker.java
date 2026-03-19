@@ -19,6 +19,9 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
     public static final int TITLE_MAX_LEN = 10;
     private static StravaChecker checker;
 
+    /**
+     * Constructor initializes the provider name for logging purposes.
+     */
     public StravaChecker() {
         this.providerName = "Strava";
     }
@@ -192,6 +195,10 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
         }
     }
 
+    /**
+     * Singleton accessor for StravaChecker instance with lazy initialization.
+     * @return Singleton instance of StravaChecker
+     */
     public static FitnessCheckActions getInstance() {
         if (checker == null) {
             checker = new StravaChecker();

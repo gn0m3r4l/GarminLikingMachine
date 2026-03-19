@@ -57,6 +57,9 @@
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>
 
+        <!-- Javadoc: Fehlende Javadocs bei öffentlichen Methoden prüfen -->
+        <module name="MissingJavadocMethod" />
+
         <!-- Formatting -->
         <module name="WhitespaceAfter"/>
         <module name="WhitespaceAround"/>

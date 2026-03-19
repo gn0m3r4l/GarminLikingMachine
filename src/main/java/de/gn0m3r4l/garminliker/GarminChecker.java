@@ -21,6 +21,9 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
 
     private static GarminChecker checker;
 
+    /**
+     * Constructor initializes the provider name for logging purposes.
+     */
     public GarminChecker() {
         this.providerName = "Garmin";
     }
@@ -154,6 +157,10 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
         return likeButton.findElements(new By.ByClassName("icon-heart-inverted")).isEmpty();
     }
 
+    /**
+     * Singleton getter for GarminChecker. Initializes the instance if not already done.
+     * @return Singleton instance of GarminChecker
+     */
     public static FitnessCheckActions getInstance() {
         if (checker == null) {
             checker = new GarminChecker();

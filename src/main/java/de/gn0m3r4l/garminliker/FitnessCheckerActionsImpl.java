@@ -57,7 +57,8 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
 
     /**
      * Perform a click on the provided like button and increment the shared counter.
-     * Returns true if click likely succeeded, false on exceptions.
+     * @param likeButton webelement to be clicked
+     * @return  true if click likely succeeded, false on exceptions
      */
     protected boolean performLike(WebElement likeButton) {
         if (likeButton == null) {
