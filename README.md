@@ -1,6 +1,6 @@
-# Garmin Liking Machine
+# Garmin/Strava Liking Machine
 ## About
-This tool uses an existing chrome session to like activities from the current user. By default (2026/01/12), 10 activities are shown initially. Those are all grabbed. To get more, scroll down and click "Mehr anzeigen".
+This tool uses an existing chrome (debug) session to like activities from a logged in user. 
 
 Already liked activities are called, but like state won't be touched.
 
@@ -17,7 +17,7 @@ java -jar target/GarminLikingMachine-1.0-SNAPSHOT.jar garmin=https://connect.gar
 ```
 
 ## Code quality / Complexity report
-This repository uses a local, checked-in Checkstyle ruleset to report cyclomatic complexity (goal: methods between 7–9 where practical). PMD has been removed from the default profile because it produced errors with Java 21 in this environment.
+This repository uses a local, checked-in Checkstyle ruleset to report cyclomatic complexity (goal: methods between 7–9 where practical).
 
 To generate the Checkstyle complexity report locally (report-only, does not fail the build):
 
