@@ -36,7 +36,7 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
             System.out.printf("Checking %s: ", url);
             runUrl(driver, url);
             try {
-                Thread.sleep(TimeConstants.MILLIES_BETWEEN_URL_DELAYS);
+                Thread.sleep(TimeConstants.MILLIS_BETWEEN_URL_DELAYS);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -45,7 +45,7 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
 
     WebElement waitForMainPageById(WebDriver driver, String htmlId) {
         // defining timeout for waiting
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(TimeConstants.WEBDRIVER_TIMOUT));
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(TimeConstants.WEBDRIVER_TIMEOUT));
 
         // waiting for main page container to be visible
         return wait.until(

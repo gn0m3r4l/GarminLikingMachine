@@ -16,6 +16,8 @@ import static de.gn0m3r4l.garminliker.Utils.pretendToBeHuman;
 public class GarminChecker extends FitnessCheckerActionsImpl {
     private static final int LIKE_CHAIN_LIMIT = 3;
     private static final int MAX_ACTIVITIES_TO_PROCESS = 3;
+    private static final String ACTIVITY_SUBPATH = "/app/activity/";
+    private static final String PROFILE_SUBPATH = "app/profile";
 
     private static GarminChecker checker;
 
@@ -30,21 +32,21 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
         driver.get(url);
         pretendToBeHuman(1);
 
-        if (!isProfilePage(driver, "app/profile")) {
+        if (!isProfilePage(driver)) {
             System.out.println("This is not a Garmin profile page. Please navigate to your profile page " +
-                    "and try again. Make sure there is only one chrome debuger instance running.");
+                    "and try again. Make sure there is only one chrome debugger instance running.");
             return;
         }
 
         System.out.println("Garmin page detected");
 
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(TimeConstants.WEBDRIVER_TIMOUT));
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(TimeConstants.WEBDRIVER_TIMEOUT));
 
         var element = waitForMainPageById(driver, "pageContainer");
 
-        List<WebElement> acitivityLinks = collectActivityLinks(element, MAX_ACTIVITIES_TO_PROCESS, "/app/activity/");
+        List<WebElement> activityLinks = collectActivityLinks(element);
 
-        for (int i = 0; i < acitivityLinks.size(); i++) {
+        for (int i = 0; i < activityLinks.size(); i++) {
 
             if (likeChain >= LIKE_CHAIN_LIMIT) {
                 System.out.println("Detected " + likeChain + " already liked activities in a row. " +
@@ -52,8 +54,8 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
                 break;
             }
 
-            System.out.println("Processing activity " + (i + 1) + " of " + acitivityLinks.size());
-            var link = acitivityLinks.get(i);
+            System.out.println("Processing activity " + (i + 1) + " of " + activityLinks.size());
+            var link = activityLinks.get(i);
 
             wait.until(
                     ExpectedConditions.visibilityOfElementLocated(
@@ -97,31 +99,6 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
     }
 
     /**
-     * Try to find a like/kudos button inside an activity container.
-     * Returns null if none found (or stale).
-     */
-    private WebElement findLikeButton(WebElement activityDiv) {
-        try {
-            List<WebElement> buttons = activityDiv.findElements(By.tagName("button"));
-            for (WebElement btn : buttons) {
-                try {
-                    String title = btn.getAttribute("title");
-                    if (title != null && title.toLowerCase().contains("kudos")) {
-                        return btn;
-                    }
-                    String cls = btn.getAttribute("class");
-                    if (cls != null && cls.toLowerCase().contains("like")) {
-                        return btn;
-                    }
-                } catch (StaleElementReferenceException ignored) {
-                }
-            }
-        } catch (StaleElementReferenceException ignored) {
-        }
-        return null;
-    }
-
-    /**
      * Navigate to href with a small human-like pause. If href is null or empty, this is a no-op.
      */
     protected void navigateToHref(WebDriver driver, String href) {
@@ -143,15 +120,15 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
      * Collect link elements from a main container that contain the provided activityPathFragment in their href.
      * Returns at most `limit` elements and filters out null hrefs.
      */
-    protected List<WebElement> collectActivityLinks(WebElement mainElement, int limit, String activityPathFragment) {
+    protected List<WebElement> collectActivityLinks(WebElement mainElement) {
         List<WebElement> result = new ArrayList<>();
         var links = mainElement.findElements(By.tagName("a"));
         for (WebElement l : links) {
             try {
                 String href = l.getAttribute("href");
-                if (href != null && href.contains(activityPathFragment)) {
+                if (href != null && href.contains(ACTIVITY_SUBPATH)) {
                     result.add(l);
-                    if (result.size() >= limit) {
+                    if (result.size() >= MAX_ACTIVITIES_TO_PROCESS) {
                         break;
                     }
                 }
@@ -164,9 +141,9 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
     /**
      * Null-safe check whether the current driver page is a profile page as indicated by marker substring.
      */
-    protected boolean isProfilePage(WebDriver driver, String marker) {
+    protected boolean isProfilePage(WebDriver driver) {
         String current = driver.getCurrentUrl();
-        return current != null && current.contains(marker);
+        return current != null && current.contains(PROFILE_SUBPATH);
     }
 
     /**
@@ -187,7 +164,7 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
     protected void navigateBack(WebDriver driver) {
         driver.navigate().back();
         try {
-            Thread.sleep(TimeConstants.MILLIES_PAUSE_AFTER_BACK_NAVIGATION);
+            Thread.sleep(TimeConstants.MILLIS_PAUSE_AFTER_BACK_NAVIGATION);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

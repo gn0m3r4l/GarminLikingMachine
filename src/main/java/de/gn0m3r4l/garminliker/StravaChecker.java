@@ -43,7 +43,7 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
                 break;
             }
 
-            likeChain = processActivity(driver, activityId, skip, Duration.ofSeconds(TimeConstants.WEBDRIVER_TIMOUT),
+            likeChain = processActivity(driver, activityId, skip, Duration.ofSeconds(TimeConstants.WEBDRIVER_TIMEOUT),
                     likeChain);
         }
 
@@ -73,14 +73,14 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
         }
 
         WebElement possibleLikeButton = findLikeButton(activityDiv);
-        return handleLikeButton(driver, possibleLikeButton, activityId, likeChain);
+        return handleLikeButton(possibleLikeButton, activityId, likeChain);
     }
 
     /**
      * Handle like button decision logic and return updated likeChain value.
      * Encapsulates title inspection and uses performLike for clicking.
      */
-    protected int handleLikeButton(WebDriver driver, WebElement likeButton, String activityId, int likeChain) {
+    protected int handleLikeButton(WebElement likeButton, String activityId, int likeChain) {
         if (likeButton == null) {
             return likeChain;
         }
@@ -141,9 +141,6 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
     protected boolean anchorContainsSkip(WebElement anchor, String[] skipSubstrings) {
         try {
             String text = anchor.getText();
-            if (text == null) {
-                return false;
-            }
             String lc = text.toLowerCase();
             for (String s : skipSubstrings) {
                 if (s != null && lc.contains(s.toLowerCase())) {
@@ -170,7 +167,7 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
 
                     // quick heuristics: text length or presence of child actionable elements
                     String txt = el.getText();
-                    if (txt != null && txt.trim().length() > TITLE_MAX_LEN) {
+                    if (txt.trim().length() > TITLE_MAX_LEN) {
                         return true;
                     }
                     List<WebElement> children = el.findElements(By.cssSelector("a, button, img, span"));

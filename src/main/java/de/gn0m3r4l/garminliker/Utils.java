@@ -14,7 +14,7 @@ public class Utils {
      */
     public static void pretendToBeHuman(int minSeconds, int maxSeconds) {
         int sleepTime = (int) ((Math.random() * (maxSeconds - minSeconds) + minSeconds)
-                * TimeConstants.MILLIES_TO_SECONDS_FACTOR);
+                * TimeConstants.MILLIS_TO_SECONDS_FACTOR);
         System.out.println("Sleeping for " + sleepTime + " milliseconds to mimic human behavior.");
         try {
             Thread.sleep(sleepTime);
@@ -27,7 +27,7 @@ public class Utils {
     /**
      * Overloaded method to mimic human behavior by sleeping a random time between
      * seconds and seconds + 1.
-     * @param seconds
+     * @param seconds Delay in seconds to sleep
      */
     public static void pretendToBeHuman(int seconds) {
         pretendToBeHuman(seconds, seconds);
