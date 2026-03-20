@@ -2,6 +2,7 @@ package de.gn0m3r4l.garminliker;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.StaleElementReferenceException;
@@ -14,6 +15,8 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
 
     protected String providerName;
     protected int givenLikes = 0;
+    // 8 is a good guess
+    private static final int URLS_PER_PART = 8;
 
     @Override
     public void run(WebDriver driver, List<String> urlsToBeCheckedSameWay) {
@@ -24,9 +27,35 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
         }
 
         System.out.printf("Processing %s%n", providerName);
-        proceedUrls(driver, urlsToBeCheckedSameWay);
+        var partedUrlList = splitUrls(urlsToBeCheckedSameWay);
+        // for each left of URLs, run the checks and like activities
+        for (var part : partedUrlList) {
+            proceedUrls(driver, part);
+            // if not the last part, wait a bit before processing the next part to avoid overwhelming the system
+            if (part != partedUrlList.getLast()) {
+                System.out.printf("Waiting some time between %ss and %ss seconds before processing " +
+                                "the next batch of URLs...%n",
+                        TimeConstants.BIGGER_PAUSE_MIN_IN_SECONDS, TimeConstants.BIGGER_PAUSE_MAX_IN_SECONDS);
+                Utils.pretendToBeHuman(TimeConstants.BIGGER_PAUSE_MIN_IN_SECONDS,
+                        TimeConstants.BIGGER_PAUSE_MAX_IN_SECONDS);
+            }
+        }
 
         System.out.printf("Total likes given for %s: %s%n", providerName, givenLikes);
+    }
+
+    /**
+     * Splits the provided list of URLs into parts of a defined size (URLS_PER_PART) to avoid overwhelming the system.
+     *
+     * @param urlsToBeCheckedSameWay rawr list of urls to be checked
+     * @return List of URL parts, where each part is a list of URLs to be processed together.
+     */
+    private List<List<String>> splitUrls(List<String> urlsToBeCheckedSameWay) {
+        return urlsToBeCheckedSameWay.stream()
+                .collect(Collectors.groupingBy(url -> urlsToBeCheckedSameWay.indexOf(url) / URLS_PER_PART))
+                .values()
+                .stream()
+                .toList();
     }
 
     @Override

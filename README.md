@@ -6,6 +6,10 @@ Already liked activities are called, but like state won't be touched.
 
 After finishing the process, the script will close the browser to free resources (chrome-driver locks code folder).
 
+### For Garmin
+
+If there is a bigger list of URLs given, it will be splitted and handled with a delay. This shall avoid cloudflare to strike.
+
 ## How to use
 1. Adjust the bat file to match your chrome path. If you change port, you have to do the same change in code. It is suggested to use a new user-dir to avoid damage to existing profiles
 2. Run the bat file. (Make sure that there is only one chrome instance running with the specified user-dir and debugging port).
