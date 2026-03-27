@@ -1,4 +1,4 @@
-package de.gn0m3r4l.garminliker;
+package de.gn0m3r4l.garminliker.utils;
 
 public class TimeConstants {
     public static final int MILLIS_BETWEEN_URL_DELAYS = 3500;

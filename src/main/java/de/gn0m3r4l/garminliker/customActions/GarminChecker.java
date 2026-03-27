@@ -1,4 +1,4 @@
-package de.gn0m3r4l.garminliker;
+package de.gn0m3r4l.garminliker.customActions;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -11,7 +11,11 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import static de.gn0m3r4l.garminliker.Utils.pretendToBeHuman;
+import de.gn0m3r4l.garminliker.actions.FitnessCheckActions;
+import de.gn0m3r4l.garminliker.actions.FitnessCheckerActionsImpl;
+import de.gn0m3r4l.garminliker.utils.TimeConstants;
+import de.gn0m3r4l.garminliker.utils.Utils;
+import static de.gn0m3r4l.garminliker.utils.Utils.pretendToBeHuman;
 
 public class GarminChecker extends FitnessCheckerActionsImpl {
     private static final int LIKE_CHAIN_LIMIT = 3;
@@ -28,7 +32,7 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
         this.providerName = "Garmin";
     }
 
-    void runUrl(WebDriver driver, String url) {
+    protected void runUrl(WebDriver driver, String url) {
 
         int likeChain = 0;
 

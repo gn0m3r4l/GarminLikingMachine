@@ -1,4 +1,4 @@
-package de.gn0m3r4l.garminliker;
+package de.gn0m3r4l.garminliker.actions;
 
 import java.time.Duration;
 import java.util.List;
@@ -10,6 +10,9 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+
+import de.gn0m3r4l.garminliker.utils.TimeConstants;
+import de.gn0m3r4l.garminliker.utils.Utils;
 
 public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
 
@@ -72,7 +75,7 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
         }
     }
 
-    WebElement waitForMainPageById(WebDriver driver, String htmlId) {
+    protected WebElement waitForMainPageById(WebDriver driver, String htmlId) {
         // defining timeout for waiting
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(TimeConstants.WEBDRIVER_TIMEOUT));
 
@@ -106,5 +109,5 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
         }
     }
 
-    abstract void runUrl(WebDriver driver, String url);
+    protected abstract void runUrl(WebDriver driver, String url);
 }

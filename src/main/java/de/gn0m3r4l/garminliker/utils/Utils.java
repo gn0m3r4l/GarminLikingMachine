@@ -1,4 +1,4 @@
-package de.gn0m3r4l.garminliker;
+package de.gn0m3r4l.garminliker.utils;
 
 /**
  * Utility class containing helper methods for the Browser application.

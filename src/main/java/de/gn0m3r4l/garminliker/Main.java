@@ -8,6 +8,9 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
+import de.gn0m3r4l.garminliker.customActions.GarminChecker;
+import de.gn0m3r4l.garminliker.customActions.StravaChecker;
+
 /**
  * Starter Klasse der Anwendung.
  */
