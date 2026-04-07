@@ -3,12 +3,14 @@ package de.gn0m3r4l.garminliker;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.nio.file.Paths;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
 import de.gn0m3r4l.garminliker.customActions.GarminChecker;
+import de.gn0m3r4l.garminliker.customActions.KomootChecker;
 import de.gn0m3r4l.garminliker.customActions.StravaChecker;
 
 /**
@@ -28,6 +30,9 @@ public class Main {
      */
     public static void main(String[] args) {
         final Map<String, List<String>> providerMap = splitArgs(args);
+
+        System.setProperty("webdriver.chrome.driver",
+                Paths.get("C:\\Users\\daniel.plagge\\donotdelete\\chromedriver\\chromedriver-win64", "chromedriver.exe").toString());
 
         ChromeOptions options = new ChromeOptions();
         options.setExperimentalOption("debuggerAddress", "localhost:9222");
