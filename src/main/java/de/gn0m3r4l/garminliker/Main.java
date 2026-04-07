@@ -34,6 +34,7 @@ public class Main {
         WebDriver driver = new ChromeDriver(options);
 
         StravaChecker.getInstance().run(driver, providerMap.get("strava"));
+        KomootChecker.getInstance().run(driver, providerMap.get("komoot"));
         GarminChecker.getInstance().run(driver, providerMap.get("garmin"));
         //2nd run for strava as it feels that it shows different stuff each time
         StravaChecker.getInstance().run(driver, providerMap.get("strava"));
