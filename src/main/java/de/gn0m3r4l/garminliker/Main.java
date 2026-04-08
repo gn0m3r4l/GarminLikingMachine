@@ -5,7 +5,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import com.microsoft.playwright.*;
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserContext;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.TimeoutError;
+
 import de.gn0m3r4l.garminliker.customActions.GarminChecker;
 import de.gn0m3r4l.garminliker.customActions.KomootChecker;
 import de.gn0m3r4l.garminliker.customActions.StravaChecker;
@@ -32,7 +37,8 @@ public class Main {
         final Map<String, List<String>> providerMap = splitArgs(args);
         try (Playwright playwright = Playwright.create()) {
             Browser browser = playwright.chromium().connectOverCDP("http://localhost:9222");
-            BrowserContext context = browser.contexts().isEmpty() ? browser.newContext() : browser.contexts().getFirst();
+            BrowserContext context = browser.contexts().isEmpty() ?
+                    browser.newContext() : browser.contexts().getFirst();
             Page page = context.pages().isEmpty() ? context.newPage() : context.pages().getFirst();
             page.setDefaultTimeout(TimeConstants.BROWSER_TIMEOUT * TimeConstants.MILLIS_TO_SECONDS_FACTOR);
             page.setDefaultNavigationTimeout(TimeConstants.BROWSER_TIMEOUT * TimeConstants.MILLIS_TO_SECONDS_FACTOR);

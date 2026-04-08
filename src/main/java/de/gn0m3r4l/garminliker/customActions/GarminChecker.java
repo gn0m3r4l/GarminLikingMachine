@@ -5,6 +5,7 @@ import java.util.List;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.PlaywrightException;
+
 import de.gn0m3r4l.garminliker.actions.FitnessCheckActions;
 import de.gn0m3r4l.garminliker.actions.FitnessCheckerActionsImpl;
 import de.gn0m3r4l.garminliker.utils.TimeConstants;
@@ -167,7 +168,7 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
         }
         page.navigate(profileUrl);
         try {
-            Thread.sleep(TimeConstants.MILLIS_PAUSE_AFTER_BACK_NAVIGATION);
+            Thread.sleep(TimeConstants.MILLIS_PAUSE_AFTER_NAVIGATION);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

@@ -7,11 +7,11 @@ import java.util.List;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.PlaywrightException;
+
 import de.gn0m3r4l.garminliker.actions.FitnessCheckActions;
 import de.gn0m3r4l.garminliker.actions.FitnessCheckerActionsImpl;
 import de.gn0m3r4l.garminliker.utils.TimeConstants;
 import de.gn0m3r4l.garminliker.utils.Utils;
-
 import static de.gn0m3r4l.garminliker.utils.Utils.pretendToBeHuman;
 
 public class StravaChecker extends FitnessCheckerActionsImpl {
@@ -55,7 +55,8 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
      * Process a single activity by id: find div, wait for load, optional skip, find like button and handle it.
      * Returns updated likeChain value.
      */
-    private int processActivity(Page page, String activityId, String[] skipSubstrings, Duration timeout, int likeChain) {
+    private int processActivity(Page page, String activityId, String[] skipSubstrings,
+                                Duration timeout, int likeChain) {
         Locator activityDiv = findActivityDiv(page, activityId);
         if (activityDiv == null) {
             return likeChain;
@@ -168,7 +169,7 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
             }
 
             try {
-                Thread.sleep(250);
+                Thread.sleep(TimeConstants.MILLIS_PAUSE_AFTER_NAVIGATION);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return false;
@@ -187,6 +188,7 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
 
     /**
      * Singleton accessor for StravaChecker instance with lazy initialization.
+     *
      * @return Singleton instance of StravaChecker
      */
     public static FitnessCheckActions getInstance() {

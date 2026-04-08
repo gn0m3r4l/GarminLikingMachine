@@ -7,6 +7,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.PlaywrightException;
 import com.microsoft.playwright.options.WaitForSelectorState;
+
 import de.gn0m3r4l.garminliker.utils.TimeConstants;
 import de.gn0m3r4l.garminliker.utils.Utils;
 
