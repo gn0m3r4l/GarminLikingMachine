@@ -4,18 +4,14 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.WebDriverWait;
-
+import com.microsoft.playwright.Locator;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.PlaywrightException;
 import de.gn0m3r4l.garminliker.actions.FitnessCheckActions;
 import de.gn0m3r4l.garminliker.actions.FitnessCheckerActionsImpl;
 import de.gn0m3r4l.garminliker.utils.TimeConstants;
 import de.gn0m3r4l.garminliker.utils.Utils;
+
 import static de.gn0m3r4l.garminliker.utils.Utils.pretendToBeHuman;
 
 public class StravaChecker extends FitnessCheckerActionsImpl {
@@ -30,13 +26,13 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
         this.providerName = "Strava";
     }
 
-    protected void runUrl(WebDriver driver, String stravaUrl) {
+    protected void runUrl(Page page, String stravaUrl) {
         int likeChain = 0;
 
-        driver.get(stravaUrl);
+        page.navigate(stravaUrl);
         pretendToBeHuman(1);
 
-        var element = waitForMainPageById(driver, "main");
+        var element = waitForMainPageById(page, "main");
 
         List<String> activityIds = collectActivityIds(element);
 
@@ -50,36 +46,33 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
                 break;
             }
 
-            likeChain = processActivity(driver, activityId, skip, Duration.ofSeconds(TimeConstants.WEBDRIVER_TIMEOUT),
+            likeChain = processActivity(page, activityId, skip, Duration.ofSeconds(TimeConstants.BROWSER_TIMEOUT),
                     likeChain);
         }
-
     }
 
     /**
      * Process a single activity by id: find div, wait for load, optional skip, find like button and handle it.
      * Returns updated likeChain value.
      */
-    private int processActivity(WebDriver driver, String activityId, String[] skipSubstrings, Duration timeout,
-                                int likeChain) {
-        WebElement activityDiv = findActivityDiv(driver, activityId);
+    private int processActivity(Page page, String activityId, String[] skipSubstrings, Duration timeout, int likeChain) {
+        Locator activityDiv = findActivityDiv(page, activityId);
         if (activityDiv == null) {
             return likeChain;
         }
 
-        boolean loaded = waitForStravaActivityDivLoaded(driver, activityId, timeout);
+        boolean loaded = waitForStravaActivityDivLoaded(activityDiv, timeout);
         if (!loaded) {
             return likeChain;
         }
 
-        // small human-like pause
         Utils.pretendToBeHuman(1, 2);
 
         if (shouldSkipActivity(activityDiv, skipSubstrings)) {
             return likeChain;
         }
 
-        WebElement possibleLikeButton = findLikeButton(activityDiv);
+        Locator possibleLikeButton = findLikeButton(activityDiv);
         return handleLikeButton(possibleLikeButton, activityId, likeChain);
     }
 
@@ -87,7 +80,7 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
      * Handle like button decision logic and return updated likeChain value.
      * Encapsulates title inspection and uses performLike for clicking.
      */
-    protected int handleLikeButton(WebElement likeButton, String activityId, int likeChain) {
+    protected int handleLikeButton(Locator likeButton, String activityId, int likeChain) {
         if (likeButton == null) {
             return likeChain;
         }
@@ -95,8 +88,8 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
         String title;
         try {
             title = likeButton.getAttribute("title");
-        } catch (StaleElementReferenceException e) {
-            System.out.println("Like button became stale for activity " + activityId + ", skipping.");
+        } catch (PlaywrightException e) {
+            System.out.println("Like button became unavailable for activity " + activityId + ", skipping.");
             return likeChain + 1;
         }
 
@@ -107,7 +100,6 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
 
         String lc = title.toLowerCase();
         if (lc.contains("ansehen")) {
-            // already liked
             likeChain++;
             System.out.printf("Already liked activity %s (like chain: %s)%n", activityId, likeChain);
             return likeChain;
@@ -126,18 +118,16 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
      * Heuristic to decide whether to skip an activity (e.g. club or own posts) by checking anchor texts.
      * Returns true if any skipSubstring is contained in any anchor text (case-insensitive).
      */
-    protected boolean shouldSkipActivity(WebElement activityDiv, String[] skipSubstrings) {
+    protected boolean shouldSkipActivity(Locator activityDiv, String[] skipSubstrings) {
         if (activityDiv == null || skipSubstrings == null || skipSubstrings.length == 0) {
             return false;
         }
-        try {
-            var anchors = activityDiv.findElements(By.tagName("a"));
-            for (WebElement a : anchors) {
-                if (anchorContainsSkip(a, skipSubstrings)) {
-                    return true;
-                }
+        Locator anchors = activityDiv.locator("a");
+        int count = anchors.count();
+        for (int i = 0; i < count; i++) {
+            if (anchorContainsSkip(anchors.nth(i), skipSubstrings)) {
+                return true;
             }
-        } catch (StaleElementReferenceException ignored) {
         }
         return false;
     }
@@ -145,16 +135,16 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
     /**
      * Check a single anchor element for any of the skip substrings. Extracted to reduce branching.
      */
-    protected boolean anchorContainsSkip(WebElement anchor, String[] skipSubstrings) {
+    protected boolean anchorContainsSkip(Locator anchor, String[] skipSubstrings) {
         try {
-            String text = anchor.getText();
+            String text = anchor.innerText();
             String lc = text.toLowerCase();
             for (String s : skipSubstrings) {
                 if (s != null && lc.contains(s.toLowerCase())) {
                     return true;
                 }
             }
-        } catch (StaleElementReferenceException ignored) {
+        } catch (PlaywrightException ignored) {
         }
         return false;
     }
@@ -162,41 +152,37 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
     /**
      * Wait until a div with the given id is populated / loaded (heuristic based on text length or children).
      */
-    protected boolean waitForStravaActivityDivLoaded(WebDriver driver, String activityId, Duration timeout) {
-        WebDriverWait wait = new WebDriverWait(driver, timeout);
-        try {
-            return wait.until(drv -> {
-                try {
-                    WebElement el = drv.findElement(By.id(activityId));
-                    // scroll into view
-                    ((JavascriptExecutor) drv).executeScript("arguments[0].scrollIntoView({behavior:'instant', " +
-                            "block:'center', inline:'center'});", el);
-
-                    // quick heuristics: text length or presence of child actionable elements
-                    String txt = el.getText();
-                    if (txt.trim().length() > TITLE_MAX_LEN) {
-                        return true;
-                    }
-                    List<WebElement> children = el.findElements(By.cssSelector("a, button, img, span"));
-                    return !children.isEmpty();
-                } catch (StaleElementReferenceException | NoSuchElementException e) {
-                    return false;
+    protected boolean waitForStravaActivityDivLoaded(Locator activityDiv, Duration timeout) {
+        long deadline = System.currentTimeMillis() + timeout.toMillis();
+        while (System.currentTimeMillis() < deadline) {
+            try {
+                activityDiv.scrollIntoViewIfNeeded();
+                String text = activityDiv.innerText();
+                if (text.trim().length() > TITLE_MAX_LEN) {
+                    return true;
                 }
-            });
-        } catch (org.openqa.selenium.TimeoutException e) {
-            return false;
+                if (activityDiv.locator("a, button, img, span").count() > 0) {
+                    return true;
+                }
+            } catch (PlaywrightException ignored) {
+            }
+
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
         }
+        return false;
     }
 
     /**
-     * Safely attempt to find an activity div by id; returns null if not found or stale.
+     * Safely attempt to find an activity div by id; returns null if not found.
      */
-    protected WebElement findActivityDiv(WebDriver driver, String activityId) {
-        try {
-            return driver.findElement(By.id(activityId));
-        } catch (NoSuchElementException | StaleElementReferenceException e) {
-            return null;
-        }
+    protected Locator findActivityDiv(Page page, String activityId) {
+        Locator locator = page.locator("#" + activityId).first();
+        return locator.count() == 0 ? null : locator;
     }
 
     /**
@@ -214,17 +200,17 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
      * Collect div ids that represent activity entries (e.g. Strava feed entries).
      * Never returns null: returns empty list if none found.
      */
-    protected List<String> collectActivityIds(WebElement element) {
+    protected List<String> collectActivityIds(Locator element) {
         List<String> activityIds = new ArrayList<>();
-        List<WebElement> allDivs = element.findElements(By.tagName("div"));
-        for (WebElement div : allDivs) {
+        Locator allDivs = element.locator("div[id]");
+        int count = allDivs.count();
+        for (int i = 0; i < count; i++) {
             try {
-                String id = div.getAttribute("id");
+                String id = allDivs.nth(i).getAttribute("id");
                 if (id != null && id.startsWith("feed-entry")) {
                     activityIds.add(id);
                 }
-            } catch (StaleElementReferenceException ignored) {
-                // skip stale elements
+            } catch (PlaywrightException ignored) {
             }
         }
         return activityIds;
@@ -232,25 +218,24 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
 
     /**
      * Try to find a like/kudos button inside an activity container.
-     * Returns null if none found (or stale).
+     * Returns null if none found.
      */
-    private WebElement findLikeButton(WebElement activityDiv) {
+    private Locator findLikeButton(Locator activityDiv) {
         try {
-            List<WebElement> buttons = activityDiv.findElements(By.tagName("button"));
-            for (WebElement btn : buttons) {
-                try {
-                    String title = btn.getAttribute("title");
-                    if (title != null && title.toLowerCase().contains("kudos")) {
-                        return btn;
-                    }
-                    String cls = btn.getAttribute("class");
-                    if (cls != null && cls.toLowerCase().contains("like")) {
-                        return btn;
-                    }
-                } catch (StaleElementReferenceException ignored) {
+            Locator buttons = activityDiv.locator("button");
+            int count = buttons.count();
+            for (int i = 0; i < count; i++) {
+                Locator button = buttons.nth(i);
+                String title = button.getAttribute("title");
+                if (title != null && title.toLowerCase().contains("kudos")) {
+                    return button;
+                }
+                String cls = button.getAttribute("class");
+                if (cls != null && cls.toLowerCase().contains("like")) {
+                    return button;
                 }
             }
-        } catch (StaleElementReferenceException ignored) {
+        } catch (PlaywrightException ignored) {
         }
         return null;
     }

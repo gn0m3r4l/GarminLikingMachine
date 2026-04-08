@@ -1,16 +1,12 @@
 package de.gn0m3r4l.garminliker.actions;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-
+import com.microsoft.playwright.Locator;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.PlaywrightException;
+import com.microsoft.playwright.options.WaitForSelectorState;
 import de.gn0m3r4l.garminliker.utils.TimeConstants;
 import de.gn0m3r4l.garminliker.utils.Utils;
 
@@ -22,7 +18,7 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
     private static final int URLS_PER_PART = 8;
 
     @Override
-    public void run(WebDriver driver, List<String> urlsToBeCheckedSameWay) {
+    public void run(Page page, List<String> urlsToBeCheckedSameWay) {
 
         if (urlsToBeCheckedSameWay == null || urlsToBeCheckedSameWay.isEmpty()) {
             System.out.printf("No URLs provided for %s, skipping.%n", providerName);
@@ -33,7 +29,7 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
         var partedUrlList = splitUrls(urlsToBeCheckedSameWay);
         // for each left of URLs, run the checks and like activities
         for (var part : partedUrlList) {
-            proceedUrls(driver, part);
+            proceedUrls(page, part);
             // if not the last part, wait a bit before processing the next part to avoid overwhelming the system
             if (part != partedUrlList.getLast()) {
                 System.out.printf("Waiting some time between %ss and %ss seconds before processing " +
@@ -62,11 +58,11 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
     }
 
     @Override
-    public void proceedUrls(WebDriver driver, List<String> urlsToBeCheckedSameWay) {
+    public void proceedUrls(Page page, List<String> urlsToBeCheckedSameWay) {
         givenLikes = 0;
         for (String url : urlsToBeCheckedSameWay) {
             System.out.printf("Checking %s: ", url);
-            runUrl(driver, url);
+            runUrl(page, url);
             try {
                 Thread.sleep(TimeConstants.MILLIS_BETWEEN_URL_DELAYS);
             } catch (InterruptedException e) {
@@ -75,24 +71,20 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
         }
     }
 
-    protected WebElement waitForMainPageById(WebDriver driver, String htmlId) {
-        // defining timeout for waiting
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(TimeConstants.WEBDRIVER_TIMEOUT));
-
-        // waiting for main page container to be visible
-        return wait.until(
-                ExpectedConditions.visibilityOfElementLocated(
-                        By.id(htmlId)
-                )
-        );
+    protected Locator waitForMainPageById(Page page, String htmlId) {
+        Locator locator = page.locator("#" + htmlId);
+        locator.waitFor(new Locator.WaitForOptions()
+                .setState(WaitForSelectorState.VISIBLE)
+                .setTimeout(TimeConstants.BROWSER_TIMEOUT * TimeConstants.MILLIS_TO_SECONDS_FACTOR));
+        return locator;
     }
 
     /**
      * Perform a click on the provided like button and increment the shared counter.
-     * @param likeButton webelement to be clicked
+     * @param likeButton locator to be clicked
      * @return  true if click likely succeeded, false on exceptions
      */
-    protected boolean performLike(WebElement likeButton) {
+    protected boolean performLike(Locator likeButton) {
         if (likeButton == null) {
             return false;
         }
@@ -103,11 +95,11 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
             // small human-like pause
             Utils.pretendToBeHuman(1, TimeConstants.DELAY_AFTER_LIKE_IN_SECONDS);
             return true;
-        } catch (StaleElementReferenceException e) {
-            System.out.println("Button went stale during click");
+        } catch (PlaywrightException e) {
+            System.out.println("Button interaction failed during click");
             return false;
         }
     }
 
-    protected abstract void runUrl(WebDriver driver, String url);
+    protected abstract void runUrl(Page page, String url);
 }

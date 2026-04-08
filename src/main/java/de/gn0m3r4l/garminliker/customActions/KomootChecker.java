@@ -3,16 +3,14 @@ package de.gn0m3r4l.garminliker.customActions;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-
+import com.microsoft.playwright.Locator;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.PlaywrightException;
 import de.gn0m3r4l.garminliker.actions.FitnessCheckActions;
 import de.gn0m3r4l.garminliker.actions.FitnessCheckerActionsImpl;
 import de.gn0m3r4l.garminliker.utils.TimeConstants;
 import de.gn0m3r4l.garminliker.utils.Utils;
+
 import static de.gn0m3r4l.garminliker.utils.Utils.pretendToBeHuman;
 
 public class KomootChecker extends FitnessCheckerActionsImpl {
@@ -22,7 +20,6 @@ public class KomootChecker extends FitnessCheckerActionsImpl {
     /**
      * Constructor initializes the provider name for logging purposes.
      */
-
     public KomootChecker() {
         this.providerName = "Komoot";
     }
@@ -40,29 +37,29 @@ public class KomootChecker extends FitnessCheckerActionsImpl {
     }
 
     @Override
-    protected void runUrl(WebDriver driver, String url) {
-        driver.get(url);
+    protected void runUrl(Page page, String url) {
+        page.navigate(url);
         pretendToBeHuman(TimeConstants.DELAY_AFTER_PAGE_LOAD);
 
-        var element = waitForMainPageById(driver, "pageMountNode");
+        var element = waitForMainPageById(page, "pageMountNode");
 
-        List<WebElement> articles = collectArticles(driver, element);
+        List<Locator> articles = collectArticles(page, element);
 
         String[] blacklist = new String[]{"Speichern", "Folgen", "What's New"};
 
         for (var article : articles) {
-            processArticle(driver, article, blacklist);
+            processArticle(article, blacklist);
             Utils.pretendToBeHuman(TimeConstants.ONE_SEC, TimeConstants.ONE_SEC * 2);
         }
     }
 
-    private void processArticle(WebDriver driver, WebElement article, String[] blacklist) {
-        scrollToArticle(driver, article);
+    private void processArticle(Locator article, String[] blacklist) {
+        scrollToArticle(article);
         if (!shouldSkipActivity(article, blacklist)) {
-            WebElement likeButton;
+            Locator likeButton;
             try {
                 likeButton = findLikeButton(article);
-            } catch (NoSuchElementException e) {
+            } catch (PlaywrightException e) {
                 return;
             }
             pretendToBeHuman(TimeConstants.ONE_SEC, TimeConstants.ONE_SEC * 2);
@@ -70,8 +67,8 @@ public class KomootChecker extends FitnessCheckerActionsImpl {
         }
     }
 
-    private void clickButtonIfNotLiked(WebElement likeButton) {
-        var buttonColor = likeButton.getCssValue("color"); //rgba(28, 26, 24, 1) grey
+    private void clickButtonIfNotLiked(Locator likeButton) {
+        var buttonColor = likeButton.evaluate("el => getComputedStyle(el).color").toString();
         var rgb = buttonColor.split("\\(")[1].split("\\)")[0].split(",");
         if (Integer.parseInt(rgb[0].trim()) < RGB_MIN_GREY
                 && Integer.parseInt(rgb[1].trim()) < RGB_MIN_GREY
@@ -80,54 +77,67 @@ public class KomootChecker extends FitnessCheckerActionsImpl {
         }
     }
 
-    private WebElement findLikeButton(WebElement article) throws NoSuchElementException {
-        return article.findElement(new By.ByCssSelector("[data-test-id='like-button']"));
+    private Locator findLikeButton(Locator article) {
+        Locator likeButton = article.locator("[data-test-id='like-button']").first();
+        if (likeButton.count() == 0) {
+            throw new PlaywrightException("Like button not found");
+        }
+        return likeButton;
     }
 
-    protected boolean shouldSkipActivity(WebElement activityDiv, String[] blacklist) {
+    protected boolean shouldSkipActivity(Locator activityDiv, String[] blacklist) {
         if (activityDiv == null || blacklist == null) {
             return true;
         }
+        String text = activityDiv.innerText();
         for (String blackListItem : blacklist) {
-            if (activityDiv.getText().contains(blackListItem)) {
+            if (text.contains(blackListItem)) {
                 return true;
             }
         }
         return false;
     }
 
-    private List<WebElement> collectArticles(WebDriver driver, WebElement element) {
-        var iteration1 = element.findElements(new By.ByTagName("article")).stream().toList();
+    private List<Locator> collectArticles(Page page, Locator element) {
+        var iteration1 = collectArticleLocators(element);
         if (!iteration1.isEmpty()) {
-            scrollToBottom(driver, iteration1.getLast());
+            scrollToBottom(page, iteration1.getLast());
         }
-        var iteration2 = element.findElements(new By.ByTagName("article")).stream().toList();
+        var iteration2 = collectArticleLocators(element);
         if (!iteration2.isEmpty()) {
-            scrollToBottom(driver, iteration2.getLast());
+            scrollToBottom(page, iteration2.getLast());
         }
-        var iteration3 = element.findElements(new By.ByTagName("article")).stream().toList();
+        var iteration3 = collectArticleLocators(element);
         return merge(iteration1, iteration2, iteration3);
     }
 
+    private List<Locator> collectArticleLocators(Locator element) {
+        Locator articlesLocator = element.locator("article");
+        int count = articlesLocator.count();
+        List<Locator> articles = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            articles.add(articlesLocator.nth(i));
+        }
+        return articles;
+    }
+
     @SafeVarargs
-    private List<WebElement> merge(List<WebElement>... lists) {
-        List<WebElement> finalList = new ArrayList<>();
-        for (List<WebElement> list : lists) {
+    private List<Locator> merge(List<Locator>... lists) {
+        List<Locator> finalList = new ArrayList<>();
+        for (List<Locator> list : lists) {
             finalList.addAll(list);
         }
 
         return finalList.stream().distinct().toList();
     }
 
-    private void scrollToBottom(WebDriver driver, WebElement last) {
-        scrollToArticle(driver, last);
-        // scroll additional ten lines
-        ((JavascriptExecutor) driver).executeScript("window.scrollBy(0, 10 * 24);"); // 24px Zeilenhöhe angenommen
+    private void scrollToBottom(Page page, Locator last) {
+        scrollToArticle(last);
+        page.evaluate("window.scrollBy(0, 10 * 24)");
         pretendToBeHuman(2);
     }
 
-    private void scrollToArticle(WebDriver driver, WebElement last) {
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({behavior:'instant', " +
-                "block:'center', inline:'center'});", last);
+    private void scrollToArticle(Locator last) {
+        last.scrollIntoViewIfNeeded();
     }
 }

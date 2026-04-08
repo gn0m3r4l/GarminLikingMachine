@@ -1,10 +1,10 @@
 # Garmin/Strava Liking Machine
 ## About
-This tool uses an existing chrome (debug) session to like activities from a logged in user. 
+This tool uses an existing Chrome debug session and connects to it via Playwright to like activities from a logged in user. 
 
 Already liked activities are called, but like state won't be touched.
 
-After finishing the process, the script will close the browser to free resources (chrome-driver locks code folder).
+After finishing the process, the script disconnects from the browser session after the run.
 
 ### For bigger lists of URLs
 
