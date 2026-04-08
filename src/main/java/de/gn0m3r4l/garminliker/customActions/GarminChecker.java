@@ -13,13 +13,12 @@ import de.gn0m3r4l.garminliker.utils.Utils;
 import static de.gn0m3r4l.garminliker.utils.Utils.pretendToBeHuman;
 
 public class GarminChecker extends FitnessCheckerActionsImpl {
+    public static final String GARMIN_MAIN_PAGE_ID = "pageContainer";
     private static final int LIKE_CHAIN_LIMIT = 3;
     private static final int MAX_ACTIVITIES_TO_PROCESS = 10;
     private static final String ACTIVITY_SUBPATH = "/app/activity/";
     private static final String PROFILE_SUBPATH = "app/profile";
     private static final String GARMIN_BASE = "https://connect.garmin.com";
-    public static final String GARMIN_MAIN_PAGE_ID = "pageContainer";
-
     private static GarminChecker checker;
 
     /**
@@ -27,6 +26,18 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
      */
     public GarminChecker() {
         this.providerName = "Garmin";
+    }
+
+    /**
+     * Singleton getter for GarminChecker. Initializes the instance if not already done.
+     *
+     * @return Singleton instance of GarminChecker
+     */
+    public static FitnessCheckActions getInstance() {
+        if (checker == null) {
+            checker = new GarminChecker();
+        }
+        return checker;
     }
 
     protected void runUrl(Page page, String url) {
@@ -149,17 +160,6 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
         } catch (PlaywrightException ignored) {
             return true;
         }
-    }
-
-    /**
-     * Singleton getter for GarminChecker. Initializes the instance if not already done.
-     * @return Singleton instance of GarminChecker
-     */
-    public static FitnessCheckActions getInstance() {
-        if (checker == null) {
-            checker = new GarminChecker();
-        }
-        return checker;
     }
 
     protected void navigateBack(Page page, String profileUrl) {

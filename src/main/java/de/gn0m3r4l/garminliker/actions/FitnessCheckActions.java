@@ -9,7 +9,8 @@ public interface FitnessCheckActions {
     /**
      * Run the fitness check for the given driver and list of urls. The implementation should call proceedUrls
      * with the same parameters.
-     * @param page Page instance to run checks
+     *
+     * @param page                   Page instance to run checks
      * @param urlsToBeCheckedSameWay List of urls to be checked in the same way. The implementation should
      *                               call proceedUrls with the same parameters.
      */
@@ -17,7 +18,8 @@ public interface FitnessCheckActions {
 
     /**
      * Checking the given urls after custom checks
-     * @param page Page instance to run checks
+     *
+     * @param page                   Page instance to run checks
      * @param urlsToBeCheckedSameWay List of urls to be checked in the same way.
      */
     void proceedUrls(Page page, List<String> urlsToBeCheckedSameWay);

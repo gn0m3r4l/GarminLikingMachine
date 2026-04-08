@@ -15,8 +15,8 @@ import de.gn0m3r4l.garminliker.utils.Utils;
 import static de.gn0m3r4l.garminliker.utils.Utils.pretendToBeHuman;
 
 public class StravaChecker extends FitnessCheckerActionsImpl {
-    private static final int LIKE_CHAIN_LIMIT = 8;
     public static final int TITLE_MAX_LEN = 10;
+    private static final int LIKE_CHAIN_LIMIT = 8;
     private static StravaChecker checker;
 
     /**
@@ -24,6 +24,18 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
      */
     public StravaChecker() {
         this.providerName = "Strava";
+    }
+
+    /**
+     * Singleton accessor for StravaChecker instance with lazy initialization.
+     *
+     * @return Singleton instance of StravaChecker
+     */
+    public static FitnessCheckActions getInstance() {
+        if (checker == null) {
+            checker = new StravaChecker();
+        }
+        return checker;
     }
 
     protected void runUrl(Page page, String stravaUrl) {
@@ -184,18 +196,6 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
     protected Locator findActivityDiv(Page page, String activityId) {
         Locator locator = page.locator("#" + activityId).first();
         return locator.count() == 0 ? null : locator;
-    }
-
-    /**
-     * Singleton accessor for StravaChecker instance with lazy initialization.
-     *
-     * @return Singleton instance of StravaChecker
-     */
-    public static FitnessCheckActions getInstance() {
-        if (checker == null) {
-            checker = new StravaChecker();
-        }
-        return checker;
     }
 
     /**

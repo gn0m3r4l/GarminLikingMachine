@@ -13,10 +13,10 @@ import de.gn0m3r4l.garminliker.utils.Utils;
 
 public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
 
-    protected String providerName;
-    protected int givenLikes = 0;
     // 8 is a good guess
     private static final int URLS_PER_PART = 8;
+    protected String providerName;
+    protected int givenLikes = 0;
 
     @Override
     public void run(Page page, List<String> urlsToBeCheckedSameWay) {
@@ -82,8 +82,9 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
 
     /**
      * Perform a click on the provided like button and increment the shared counter.
+     *
      * @param likeButton locator to be clicked
-     * @return  true if click likely succeeded, false on exceptions
+     * @return true if click likely succeeded, false on exceptions
      */
     protected boolean performLike(Locator likeButton) {
         if (likeButton == null) {

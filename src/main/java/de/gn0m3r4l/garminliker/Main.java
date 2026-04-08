@@ -68,12 +68,10 @@ public class Main {
         try {
             check.accept(page);
             return true;
-        }
-        catch (TimeoutError te) {
+        } catch (TimeoutError te) {
             System.err.println("Timeout while processing provider check: " + te.getMessage());
             return false;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.err.println("Error while processing provider check: " + e.getMessage());
             return false;
         }

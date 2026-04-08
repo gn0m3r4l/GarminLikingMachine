@@ -27,6 +27,7 @@ public class Utils {
     /**
      * Overloaded method to mimic human behavior by sleeping a random time between
      * seconds and seconds + 1.
+     *
      * @param seconds Delay in seconds to sleep
      */
     public static void pretendToBeHuman(int seconds) {
