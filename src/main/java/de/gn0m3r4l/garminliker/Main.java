@@ -47,9 +47,7 @@ public class Main {
             List<Consumer<Page>> checks = List.of(
                     currentPage -> StravaChecker.getInstance().run(currentPage, providerMap.get("strava")),
                     currentPage -> KomootChecker.getInstance().run(currentPage, providerMap.get("komoot")),
-                    currentPage -> GarminChecker.getInstance().run(currentPage, providerMap.get("garmin")),
-                    // 2nd run for strava as it feels that it shows different stuff each time
-                    currentPage -> StravaChecker.getInstance().run(currentPage, providerMap.get("strava"))
+                    currentPage -> GarminChecker.getInstance().run(currentPage, providerMap.get("garmin"))
             );
 
             for (Consumer<Page> check : checks) {
