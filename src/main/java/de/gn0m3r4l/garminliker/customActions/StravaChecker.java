@@ -16,7 +16,7 @@ import static de.gn0m3r4l.garminliker.utils.Utils.pretendToBeHuman;
 
 public class StravaChecker extends FitnessCheckerActionsImpl {
     public static final int TITLE_MAX_LEN = 10;
-    private static final int LIKE_CHAIN_LIMIT = 8;
+    private static final int LIKE_CHAIN_LIMIT = 12;
     private static StravaChecker checker;
 
     /**
