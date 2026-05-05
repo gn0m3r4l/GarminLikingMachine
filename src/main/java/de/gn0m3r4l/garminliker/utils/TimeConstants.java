@@ -12,5 +12,6 @@ public class TimeConstants {
     public static final int MILLIS_TO_SECONDS_FACTOR = 1000;
     public static final int BIGGER_PAUSE_MAX_IN_SECONDS = 120;
     public static final int BIGGER_PAUSE_MIN_IN_SECONDS = 90;
+    public static final int LOG_INTERVAL_SECONDS = 60;
     public static final int ONE_SEC = 1;
 }

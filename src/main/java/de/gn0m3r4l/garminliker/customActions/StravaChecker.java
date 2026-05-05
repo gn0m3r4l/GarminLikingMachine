@@ -4,6 +4,9 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.PlaywrightException;
@@ -15,6 +18,7 @@ import de.gn0m3r4l.garminliker.utils.Utils;
 import static de.gn0m3r4l.garminliker.utils.Utils.pretendToBeHuman;
 
 public class StravaChecker extends FitnessCheckerActionsImpl {
+    private static final Logger logger = LoggerFactory.getLogger(StravaChecker.class);
     public static final int TITLE_MAX_LEN = 10;
     private static final int LIKE_CHAIN_LIMIT = 12;
     private static StravaChecker checker;
@@ -53,8 +57,8 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
         for (var activityId : activityIds) {
 
             if (likeChain >= LIKE_CHAIN_LIMIT) {
-                System.out.println("Detected " + likeChain + " already liked activities in a row. Assuming " +
-                        "all activities are liked. Stopping further processing for this profile.");
+                logger.info("Detected {} already liked activities in a row. Assuming " +
+                        "all activities are liked. Stopping further processing for this profile.", likeChain);
                 break;
             }
 
@@ -102,19 +106,19 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
         try {
             title = likeButton.getAttribute("title");
         } catch (PlaywrightException e) {
-            System.out.println("Like button became unavailable for activity " + activityId + ", skipping.");
+            logger.debug("Like button became unavailable for activity {}, skipping.", activityId);
             return likeChain + 1;
         }
 
         if (title == null) {
-            System.out.println("Like button has no title for activity " + activityId + ", skipping status check.");
+            logger.debug("Like button has no title for activity {}, skipping status check.", activityId);
             return likeChain + 1;
         }
 
         String lc = title.toLowerCase();
         if (lc.contains("ansehen")) {
             likeChain++;
-            System.out.printf("Already liked activity %s (like chain: %s)%n", activityId, likeChain);
+            logger.debug("Already liked activity {} (like chain: {})", activityId, likeChain);
             return likeChain;
         }
 
@@ -123,7 +127,7 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
             return ok ? 0 : likeChain + 1;
         }
 
-        System.out.println("Could not determine like status for activity " + activityId);
+        logger.debug("Could not determine like status for activity {}", activityId);
         return likeChain + 1;
     }
 

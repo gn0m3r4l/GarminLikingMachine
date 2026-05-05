@@ -3,6 +3,9 @@ package de.gn0m3r4l.garminliker.actions;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.PlaywrightException;
@@ -13,6 +16,7 @@ import de.gn0m3r4l.garminliker.utils.Utils;
 
 public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
 
+    private static final Logger logger = LoggerFactory.getLogger(FitnessCheckerActionsImpl.class);
     // 8 is a good guess
     private static final int URLS_PER_PART = 8;
     protected String providerName;
@@ -22,26 +26,26 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
     public void run(Page page, List<String> urlsToBeCheckedSameWay) {
 
         if (urlsToBeCheckedSameWay == null || urlsToBeCheckedSameWay.isEmpty()) {
-            System.out.printf("No URLs provided for %s, skipping.%n", providerName);
+            logger.debug("No URLs provided for {}, skipping.", providerName);
             return;
         }
 
-        System.out.printf("Processing %s%n", providerName);
+        logger.debug("Processing {}", providerName);
         var partedUrlList = splitUrls(urlsToBeCheckedSameWay);
         // for each left of URLs, run the checks and like activities
         for (var part : partedUrlList) {
             proceedUrls(page, part);
             // if not the last part, wait a bit before processing the next part to avoid overwhelming the system
             if (part != partedUrlList.getLast()) {
-                System.out.printf("Waiting some time between %ss and %ss seconds before processing " +
-                                "the next batch of URLs...%n",
+                logger.debug("Waiting some time between {}s and {}s seconds before processing " +
+                                "the next batch of URLs...",
                         TimeConstants.BIGGER_PAUSE_MIN_IN_SECONDS, TimeConstants.BIGGER_PAUSE_MAX_IN_SECONDS);
                 Utils.pretendToBeHuman(TimeConstants.BIGGER_PAUSE_MIN_IN_SECONDS,
                         TimeConstants.BIGGER_PAUSE_MAX_IN_SECONDS);
             }
         }
 
-        System.out.printf("Total likes given for %s: %s%n", providerName, givenLikes);
+        logger.info("Total likes given for {}: {}", providerName, givenLikes);
     }
 
     /**
@@ -62,7 +66,7 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
     public void proceedUrls(Page page, List<String> urlsToBeCheckedSameWay) {
         givenLikes = 0;
         for (String url : urlsToBeCheckedSameWay) {
-            System.out.printf("Checking %s: ", url);
+            logger.debug("Checking {}", url);
             runUrl(page, url);
             try {
                 Thread.sleep(TimeConstants.MILLIS_BETWEEN_URL_DELAYS);
@@ -93,12 +97,12 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
         try {
             likeButton.click();
             givenLikes++;
-            System.out.println("Total likes given so far: " + givenLikes);
+            logger.info("Total likes given so far: {}", givenLikes);
             // small human-like pause
             Utils.pretendToBeHuman(1, TimeConstants.DELAY_AFTER_LIKE_IN_SECONDS);
             return true;
         } catch (PlaywrightException e) {
-            System.out.println("Button interaction failed during click");
+            logger.debug("Button interaction failed during click");
             return false;
         }
     }

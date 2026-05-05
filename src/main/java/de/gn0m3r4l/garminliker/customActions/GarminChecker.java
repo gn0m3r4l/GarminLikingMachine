@@ -2,6 +2,9 @@ package de.gn0m3r4l.garminliker.customActions;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.PlaywrightException;
@@ -13,6 +16,7 @@ import de.gn0m3r4l.garminliker.utils.Utils;
 import static de.gn0m3r4l.garminliker.utils.Utils.pretendToBeHuman;
 
 public class GarminChecker extends FitnessCheckerActionsImpl {
+    private static final Logger logger = LoggerFactory.getLogger(GarminChecker.class);
     public static final String GARMIN_MAIN_PAGE_ID = "pageContainer";
     private static final int LIKE_CHAIN_LIMIT = 3;
     private static final int MAX_ACTIVITIES_TO_PROCESS = 5;
@@ -49,12 +53,12 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
         pretendToBeHuman(1);
 
         if (!isProfilePage(page)) {
-            System.out.println("This is not a Garmin profile page. Please navigate to your profile page " +
+            logger.debug("This is not a Garmin profile page. Please navigate to your profile page " +
                     "and try again. Make sure there is only one chrome debugger instance running.");
             return;
         }
 
-        System.out.println("Garmin page detected");
+        logger.debug("Garmin page detected");
         String profileUrl = page.url();
 
         waitForMainPageById(page, GARMIN_MAIN_PAGE_ID);
@@ -63,19 +67,19 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
         for (int i = 0; i < activityLinks.size(); i++) {
 
             if (likeChain >= LIKE_CHAIN_LIMIT) {
-                System.out.println("Detected " + likeChain + " already liked activities in a row. " +
-                        "Assuming all activities are liked. Stopping further processing for this profile.");
+                logger.debug("Detected {} already liked activities in a row. " +
+                        "Assuming all activities are liked. Stopping further processing for this profile.", likeChain);
                 break;
             }
 
-            System.out.println("Processing activity " + (i + 1) + " of " + activityLinks.size());
+            logger.debug("Processing activity {} of {}", (i + 1), activityLinks.size());
             String href = activityLinks.get(i);
             if (href == null) {
-                System.out.println("Activity link has no href, skipping.");
+                logger.debug("Activity link has no href, skipping.");
                 continue;
             }
 
-            System.out.println("Navigating to activity: " + href);
+            logger.info("Navigating to activity: {}", href);
             navigateToHref(page, href);
 
             // simulate time for search a web page for a button
@@ -91,7 +95,7 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
                     likeChain = 0;
                 }
             } else {
-                System.out.printf("Already liked activity (like chain: %s)%n", likeChain);
+                logger.debug("Already liked activity (like chain: {})", likeChain);
                 likeChain++;
             }
 

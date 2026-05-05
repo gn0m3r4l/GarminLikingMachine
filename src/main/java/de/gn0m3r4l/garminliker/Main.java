@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.Page;
@@ -21,6 +24,7 @@ import de.gn0m3r4l.garminliker.utils.TimeConstants;
  */
 public class Main {
 
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
     public static final int WEBSITE_MAX_RETRY_COUNT = 3;
 
     /**
@@ -50,6 +54,10 @@ public class Main {
                     currentPage -> GarminChecker.getInstance().run(currentPage, providerMap.get("garmin"))
             );
 
+            var aliveLogger = new de.gn0m3r4l.garminliker.utils.AliveLogger();
+            Thread aliveLoggerThread = new Thread(aliveLogger);
+            aliveLoggerThread.start();
+
             for (Consumer<Page> check : checks) {
                 for (int retry = 0; retry < WEBSITE_MAX_RETRY_COUNT; retry++) {
                     if (tryCheck(check, page)) {
@@ -58,6 +66,7 @@ public class Main {
                 }
             }
 
+            aliveLogger.setRunning(false);
             browser.close();
         }
     }
@@ -67,10 +76,10 @@ public class Main {
             check.accept(page);
             return true;
         } catch (TimeoutError te) {
-            System.err.println("Timeout while processing provider check: " + te.getMessage());
+            logger.error("Timeout while processing provider check: {}", te.getMessage());
             return false;
         } catch (Exception e) {
-            System.err.println("Error while processing provider check: " + e.getMessage());
+            logger.error("Error while processing provider check: {}", e.getMessage());
             return false;
         }
     }
@@ -96,7 +105,7 @@ public class Main {
                 var url = split[1].trim();
                 providerMap.computeIfAbsent(provider, k -> new java.util.ArrayList<>()).add(url);
             } else {
-                System.out.println("Invalid argument format: " + arg + ". Expected format: provider=url");
+                logger.debug("Invalid argument format: {}. Expected format: provider=url", arg);
             }
         }
         return providerMap;
