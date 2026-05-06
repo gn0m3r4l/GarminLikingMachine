@@ -8,16 +8,15 @@ import static de.gn0m3r4l.garminliker.utils.TimeConstants.LOG_INTERVAL_SECONDS;
 public class AliveLogger implements Runnable {
 
     private boolean running = true;
-    private long startingMillies;
     private static final Logger logger = LoggerFactory.getLogger(AliveLogger.class);
 
     @Override
     public void run() {
-        this.startingMillies = System.currentTimeMillis();
+        long startingMillies = System.currentTimeMillis();
         while (running) {
             try {
                 Thread.sleep(LOG_INTERVAL_SECONDS * TimeConstants.MILLIS_TO_SECONDS_FACTOR);
-                var deltaMillies = System.currentTimeMillis() - this.startingMillies;
+                var deltaMillies = System.currentTimeMillis() - startingMillies;
                 logger.info("Still alive. Job running for {} seconds.  If nothing happens, " +
                                 "check for planned pause notification in Logs."
                         , (int) (deltaMillies / TimeConstants.MILLIS_TO_SECONDS_FACTOR));
