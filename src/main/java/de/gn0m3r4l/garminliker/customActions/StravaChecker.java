@@ -18,9 +18,10 @@ import de.gn0m3r4l.garminliker.utils.Utils;
 import static de.gn0m3r4l.garminliker.utils.Utils.pretendToBeHuman;
 
 public class StravaChecker extends FitnessCheckerActionsImpl {
-    private static final Logger logger = LoggerFactory.getLogger(StravaChecker.class);
     public static final int TITLE_MAX_LEN = 10;
+    private static final Logger logger = LoggerFactory.getLogger(StravaChecker.class);
     private static final int LIKE_CHAIN_LIMIT = 12;
+    private static final int CLUB_LIMIT = 25;
     private static StravaChecker checker;
 
     /**
@@ -44,7 +45,7 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
 
     protected void runUrl(Page page, String stravaUrl) {
         int likeChain = 0;
-
+        int givenLikes = 0;
         page.navigate(stravaUrl);
         pretendToBeHuman(1);
 
@@ -62,8 +63,21 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
                 break;
             }
 
-            likeChain = processActivity(page, activityId, skip, Duration.ofSeconds(TimeConstants.BROWSER_TIMEOUT),
-                    likeChain);
+            var likeChainBefore = likeChain;
+            var newLikeChain = processActivity(page, activityId, skip,
+                    Duration.ofSeconds(TimeConstants.BROWSER_TIMEOUT), likeChain);
+            // if equal, activity wasn't liked before
+            if (likeChainBefore == newLikeChain) {
+                givenLikes++;
+            }
+
+            if (stravaUrl.contains("club")) {
+                if (givenLikes == CLUB_LIMIT) {
+                    logger.debug("Reached like limit ({}) for a club", CLUB_LIMIT);
+                    break;
+                }
+            }
+            likeChain = newLikeChain;
         }
     }
 
