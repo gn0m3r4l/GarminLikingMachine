@@ -7,7 +7,7 @@ import static de.gn0m3r4l.garminliker.utils.TimeConstants.LOG_INTERVAL_SECONDS;
 
 public class AliveLogger implements Runnable {
 
-    private boolean running = true;
+    private volatile boolean running = true;
     private static final Logger logger = LoggerFactory.getLogger(AliveLogger.class);
 
     @Override
@@ -20,7 +20,11 @@ public class AliveLogger implements Runnable {
                 logger.info("Still alive. Job running for {} seconds.  If nothing happens, " +
                                 "check for planned pause notification in Logs."
                         , (int) (deltaMillies / TimeConstants.MILLIS_TO_SECONDS_FACTOR));
-            } catch (InterruptedException e) { }
+            } catch (InterruptedException e) {
+                // interrupt() kommt nur beim Beenden -> Schleife verlassen
+                Thread.currentThread().interrupt();
+                return;
+            }
         }
     }
 

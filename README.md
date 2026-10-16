@@ -15,7 +15,11 @@ If there is a bigger list of URLs given for the same provider, it will be splitt
 2. Run the bat file. (Make sure that there is only one chrome instance running with the specified user-dir and debugging port).
 3. Login to Garmin and/or Strava
 5. Run the app with Parameters: garmin=, garmin=, komoot=, strava=... Only keys "garmin", "strava" and "komoot" are supported, but you can use them multiple times. 
-Garmin URLs must point to profiles, Strava URLs must point to dashboards with listed activities.
+Garmin URLs must point either to the newsfeed (`https://connect.garmin.com/app/newsfeed`) or to profiles, Strava URLs must point to dashboards with listed activities.
+
+### Garmin newsfeed mode
+With `garmin=https://connect.garmin.com/app/newsfeed` the app opens the newsfeed, checks the people filter after Garmin has loaded the stored preference and, if it is not exactly "Freunde", switches it and reloads the feed and likes every not yet liked activity from top to bottom. The feed is a virtualized list, so cards are tracked by activity id while scrolling. At the end of the rendered list it scrolls and waits for the lazy loading (spinner gone, new entries rendered, max. 20 s).
+It stops when `LIKE_CHAIN_LIMIT` (5) already liked activities in a row were found, nothing more is loaded after 3 attempts (end of feed) or `MAX_LIKES_PER_RUN` (150) is reached. Profile URLs still work and can be mixed with the newsfeed URL.
 ```powershell
 java -jar target/GarminLikingMachine-1.0-SNAPSHOT.jar garmin=https://connect.garmin.com/modern/profile/12345678 garmin=https://connect.garmin.com/modern/profile/87654321 strava=https://www.strava.com/dashboard
 ```

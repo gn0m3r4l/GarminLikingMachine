@@ -21,7 +21,7 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
     public static final int TITLE_MAX_LEN = 10;
     private static final Logger logger = LoggerFactory.getLogger(StravaChecker.class);
     private static final int LIKE_CHAIN_LIMIT = 12;
-    private static final int CLUB_LIMIT = 25;
+    private static final int CLUB_LIMIT = 350;
     private static StravaChecker checker;
 
     /**

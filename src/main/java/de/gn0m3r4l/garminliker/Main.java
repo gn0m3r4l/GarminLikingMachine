@@ -15,6 +15,7 @@ import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.TimeoutError;
 
 import de.gn0m3r4l.garminliker.customActions.GarminChecker;
+import de.gn0m3r4l.garminliker.customActions.GarminNewsfeedChecker;
 import de.gn0m3r4l.garminliker.customActions.KomootChecker;
 import de.gn0m3r4l.garminliker.customActions.StravaChecker;
 import de.gn0m3r4l.garminliker.utils.TimeConstants;
@@ -36,9 +37,16 @@ public class Main {
      *             oder "garmin=https://connect.garmin.com/app/profile/12345". Es können mehrere URLs für den
      *             gleichen Anbieter angegeben werden, z.B. "strava=https://www.strava.com/athletes/12345
      *             strava=https://www.strava.com/athletes/67890".
+     *             Für den Garmin-Newsfeed (Filter "Freunde"): "garmin=https://connect.garmin.com/app/newsfeed".
      */
     public static void main(String[] args) {
         final Map<String, List<String>> providerMap = splitArgs(args);
+        // Garmin: Newsfeed-URL -> GarminNewsfeedChecker, alle anderen (Profile) -> GarminChecker
+        final List<String> garminUrls = providerMap.getOrDefault("garmin", List.of());
+        final List<String> garminFeedUrls = garminUrls.stream()
+                .filter(GarminNewsfeedChecker::isNewsfeedUrl).toList();
+        final List<String> garminProfileUrls = garminUrls.stream()
+                .filter(url -> !GarminNewsfeedChecker.isNewsfeedUrl(url)).toList();
         try (Playwright playwright = Playwright.create()) {
             Browser browser = playwright.chromium().connectOverCDP("http://localhost:9222");
             BrowserContext context = browser.contexts().isEmpty() ?
@@ -51,11 +59,14 @@ public class Main {
             List<Consumer<Page>> checks = List.of(
                     currentPage -> StravaChecker.getInstance().run(currentPage, providerMap.get("strava")),
                     currentPage -> KomootChecker.getInstance().run(currentPage, providerMap.get("komoot")),
-                    currentPage -> GarminChecker.getInstance().run(currentPage, providerMap.get("garmin"))
+                    currentPage -> GarminNewsfeedChecker.getInstance().run(currentPage, garminFeedUrls),
+                    currentPage -> GarminChecker.getInstance().run(currentPage, garminProfileUrls)
             );
 
             var aliveLogger = new de.gn0m3r4l.garminliker.utils.AliveLogger();
             Thread aliveLoggerThread = new Thread(aliveLogger);
+            // Daemon: haelt die JVM nicht am Leben, falls das Beenden doch einmal haengt
+            aliveLoggerThread.setDaemon(true);
             aliveLoggerThread.start();
 
             for (Consumer<Page> check : checks) {
@@ -67,6 +78,7 @@ public class Main {
             }
 
             aliveLogger.setRunning(false);
+            aliveLoggerThread.interrupt();
             browser.close();
         }
     }

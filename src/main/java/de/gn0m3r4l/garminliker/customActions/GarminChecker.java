@@ -19,7 +19,7 @@ public class GarminChecker extends FitnessCheckerActionsImpl {
     private static final Logger logger = LoggerFactory.getLogger(GarminChecker.class);
     public static final String GARMIN_MAIN_PAGE_ID = "pageContainer";
     private static final int LIKE_CHAIN_LIMIT = 3;
-    private static final int MAX_ACTIVITIES_TO_PROCESS = 5;
+    private static final int MAX_ACTIVITIES_TO_PROCESS = 15;
     private static final String ACTIVITY_SUBPATH = "/app/activity/";
     private static final String PROFILE_SUBPATH = "app/profile";
     private static final String GARMIN_BASE = "https://connect.garmin.com";
