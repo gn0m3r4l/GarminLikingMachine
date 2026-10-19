@@ -22,6 +22,7 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
     private static final Logger logger = LoggerFactory.getLogger(StravaChecker.class);
     private static final int LIKE_CHAIN_LIMIT = 12;
     private static final int CLUB_LIMIT = 350;
+    private static final int MAX_LIKES_PER_RUN = 500;
     private static StravaChecker checker;
 
     /**
@@ -29,6 +30,7 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
      */
     public StravaChecker() {
         this.providerName = "Strava";
+        this.maxLikesPerRun = MAX_LIKES_PER_RUN;
     }
 
     /**
@@ -56,6 +58,10 @@ public class StravaChecker extends FitnessCheckerActionsImpl {
         String[] skip = new String[]{"strava club", "daniel p"};
 
         for (var activityId : activityIds) {
+
+            if (likeLimitReached()) {
+                break;
+            }
 
             if (likeChain >= LIKE_CHAIN_LIMIT) {
                 logger.info("Detected {} already liked activities in a row. Assuming " +

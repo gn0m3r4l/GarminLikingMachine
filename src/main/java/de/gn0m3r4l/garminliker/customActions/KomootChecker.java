@@ -15,6 +15,7 @@ import static de.gn0m3r4l.garminliker.utils.Utils.pretendToBeHuman;
 
 public class KomootChecker extends FitnessCheckerActionsImpl {
     public static final int RGB_MIN_GREY = 35;
+    private static final int MAX_LIKES_PER_RUN = 100;
     private static KomootChecker checker;
 
     /**
@@ -22,6 +23,7 @@ public class KomootChecker extends FitnessCheckerActionsImpl {
      */
     public KomootChecker() {
         this.providerName = "Komoot";
+        this.maxLikesPerRun = MAX_LIKES_PER_RUN;
     }
 
     /**
@@ -48,6 +50,9 @@ public class KomootChecker extends FitnessCheckerActionsImpl {
         String[] blacklist = new String[]{"Speichern", "Folgen", "What's New"};
 
         for (var article : articles) {
+            if (likeLimitReached()) {
+                break;
+            }
             processArticle(article, blacklist);
             Utils.pretendToBeHuman(TimeConstants.ONE_SEC, TimeConstants.ONE_SEC * 2);
         }

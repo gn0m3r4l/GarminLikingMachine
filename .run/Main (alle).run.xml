@@ -1,0 +1,20 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Main (alle)" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="de.gn0m3r4l.garminliker.Main" />
+    <module name="GarminLikingMachine" />
+    <option name="PROGRAM_PARAMETERS" value="strava=https://www.strava.com/dashboard?club_id=538410&amp;feed_type=club strava=https://www.strava.com/dashboard?num_entries=60 strava=https://www.strava.com/dashboard?club_id=1648156&amp;feed_type=club strava=https://www.strava.com/dashboard?club_id=110387&amp;feed_type=club garmin=https://connect.garmin.com/app/newsfeed komoot=https://www.komoot.com/de-de" />
+    <extension name="net.ashald.envfile">
+      <option name="IS_ENABLED" value="false" />
+      <option name="IS_SUBST" value="false" />
+      <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+      <option name="IS_IGNORE_MISSING_FILES" value="false" />
+      <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+      <ENTRIES>
+        <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
+      </ENTRIES>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

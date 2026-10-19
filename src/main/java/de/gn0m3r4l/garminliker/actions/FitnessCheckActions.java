@@ -23,4 +23,19 @@ public interface FitnessCheckActions {
      * @param urlsToBeCheckedSameWay List of urls to be checked in the same way.
      */
     void proceedUrls(Page page, List<String> urlsToBeCheckedSameWay);
+
+    /**
+     * @return name of the provider for logging purposes
+     */
+    String getProviderName();
+
+    /**
+     * @return likes given during the last call of run
+     */
+    int getGivenLikes();
+
+    /**
+     * @return true if the max likes per run for this provider are reached
+     */
+    boolean likeLimitReached();
 }

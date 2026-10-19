@@ -1,9 +1,10 @@
 package de.gn0m3r4l.garminliker;
 
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,7 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.TimeoutError;
 
+import de.gn0m3r4l.garminliker.actions.FitnessCheckActions;
 import de.gn0m3r4l.garminliker.customActions.GarminChecker;
 import de.gn0m3r4l.garminliker.customActions.GarminNewsfeedChecker;
 import de.gn0m3r4l.garminliker.customActions.KomootChecker;
@@ -56,11 +58,11 @@ public class Main {
             page.setDefaultNavigationTimeout(TimeConstants.BROWSER_TIMEOUT * TimeConstants.MILLIS_TO_SECONDS_FACTOR);
             page.bringToFront();
 
-            List<Consumer<Page>> checks = List.of(
-                    currentPage -> StravaChecker.getInstance().run(currentPage, providerMap.get("strava")),
-                    currentPage -> KomootChecker.getInstance().run(currentPage, providerMap.get("komoot")),
-                    currentPage -> GarminNewsfeedChecker.getInstance().run(currentPage, garminFeedUrls),
-                    currentPage -> GarminChecker.getInstance().run(currentPage, garminProfileUrls)
+            List<Check> checks = List.of(
+                    new Check(StravaChecker.getInstance(), providerMap.getOrDefault("strava", List.of())),
+                    new Check(KomootChecker.getInstance(), providerMap.getOrDefault("komoot", List.of())),
+                    new Check(GarminNewsfeedChecker.getInstance(), garminFeedUrls),
+                    new Check(GarminChecker.getInstance(), garminProfileUrls)
             );
 
             var aliveLogger = new de.gn0m3r4l.garminliker.utils.AliveLogger();
@@ -69,23 +71,69 @@ public class Main {
             aliveLoggerThread.setDaemon(true);
             aliveLoggerThread.start();
 
-            for (Consumer<Page> check : checks) {
-                for (int retry = 0; retry < WEBSITE_MAX_RETRY_COUNT; retry++) {
-                    if (tryCheck(check, page)) {
-                        break;
-                    }
-                }
+            List<CheckResult> results = new ArrayList<>();
+            for (Check check : checks) {
+                results.add(runCheck(check, page));
             }
 
             aliveLogger.setRunning(false);
             aliveLoggerThread.interrupt();
             browser.close();
+
+            logSummary(results);
         }
     }
 
-    private static boolean tryCheck(Consumer<Page> check, Page page) {
+    private static CheckResult runCheck(Check check, Page page) {
+        var actions = check.actions();
+        if (check.urls().isEmpty()) {
+            return new CheckResult(actions.getProviderName(), check.urls().size(), 0, "übersprungen", Duration.ZERO);
+        }
+        long start = System.currentTimeMillis();
+        int likes = 0;
+        boolean success = false;
+        int attempts = 0;
+        while (!success && attempts < WEBSITE_MAX_RETRY_COUNT) {
+            attempts++;
+            success = tryCheck(check, page);
+            // likes of failed attempts were given as well, so sum them up
+            likes += actions.getGivenLikes();
+        }
+        String status;
+        if (!success) {
+            status = "FEHLER nach " + attempts + " Versuchen";
+        } else if (actions.likeLimitReached()) {
+            status = "Like-Limit erreicht";
+        } else {
+            status = attempts > 1 ? "OK (" + attempts + " Versuche)" : "OK";
+        }
+        return new CheckResult(actions.getProviderName(), check.urls().size(), likes, status,
+                Duration.ofMillis(System.currentTimeMillis() - start));
+    }
+
+    private static void logSummary(List<CheckResult> results) {
+        var sb = new StringBuilder("\n===== Zusammenfassung =====\n");
+        int totalLikes = 0;
+        Duration totalDuration = Duration.ZERO;
+        for (CheckResult result : results) {
+            sb.append(String.format("%-16s %3d URLs  %4d Likes  %6s  %s%n", result.provider(), result.urlCount(),
+                    result.likes(), formatDuration(result.duration()), result.status()));
+            totalLikes += result.likes();
+            totalDuration = totalDuration.plus(result.duration());
+        }
+        sb.append(String.format("%-16s %3s       %4d Likes  %6s%n", "Gesamt", "", totalLikes,
+                formatDuration(totalDuration)));
+        sb.append("===========================");
+        logger.info(sb.toString());
+    }
+
+    private static String formatDuration(Duration duration) {
+        return String.format("%d:%02d", duration.toMinutes(), duration.toSecondsPart());
+    }
+
+    private static boolean tryCheck(Check check, Page page) {
         try {
-            check.accept(page);
+            check.actions().run(page, check.urls());
             return true;
         } catch (TimeoutError te) {
             logger.error("Timeout while processing provider check: {}", te.getMessage());
@@ -94,6 +142,12 @@ public class Main {
             logger.error("Error while processing provider check: {}", e.getMessage());
             return false;
         }
+    }
+
+    private record Check(FitnessCheckActions actions, List<String> urls) {
+    }
+
+    private record CheckResult(String provider, int urlCount, int likes, String status, Duration duration) {
     }
 
     /**

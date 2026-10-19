@@ -21,6 +21,8 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
     private static final int URLS_PER_PART = 8;
     protected String providerName;
     protected int givenLikes = 0;
+    // max likes per run() for this provider, may be overridden by subclasses
+    protected int maxLikesPerRun = Integer.MAX_VALUE;
 
     @Override
     public void run(Page page, List<String> urlsToBeCheckedSameWay) {
@@ -31,10 +33,15 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
         }
 
         logger.debug("Processing {}", providerName);
+        givenLikes = 0;
         var partedUrlList = splitUrls(urlsToBeCheckedSameWay);
         // for each left of URLs, run the checks and like activities
         for (var part : partedUrlList) {
             proceedUrls(page, part);
+            if (likeLimitReached()) {
+                logger.info("Reached max likes per run ({}) for {}. Stopping.", maxLikesPerRun, providerName);
+                break;
+            }
             // if not the last part, wait a bit before processing the next part to avoid overwhelming the system
             if (part != partedUrlList.getLast()) {
                 logger.debug("Waiting some time between {}s and {}s seconds before processing " +
@@ -64,8 +71,10 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
 
     @Override
     public void proceedUrls(Page page, List<String> urlsToBeCheckedSameWay) {
-        givenLikes = 0;
         for (String url : urlsToBeCheckedSameWay) {
+            if (likeLimitReached()) {
+                return;
+            }
             logger.debug("Checking {}", url);
             runUrl(page, url);
             try {
@@ -91,7 +100,7 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
      * @return true if click likely succeeded, false on exceptions
      */
     protected boolean performLike(Locator likeButton) {
-        if (likeButton == null) {
+        if (likeButton == null || likeLimitReached()) {
             return false;
         }
         try {
@@ -105,6 +114,21 @@ public abstract class FitnessCheckerActionsImpl implements FitnessCheckActions {
             logger.debug("Button interaction failed during click");
             return false;
         }
+    }
+
+    @Override
+    public boolean likeLimitReached() {
+        return givenLikes >= maxLikesPerRun;
+    }
+
+    @Override
+    public String getProviderName() {
+        return providerName;
+    }
+
+    @Override
+    public int getGivenLikes() {
+        return givenLikes;
     }
 
     protected abstract void runUrl(Page page, String url);
